@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>MuhCodes Workshop</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ─── Desktop ──────────────────────────────────── -->
+  <div id="desktop" role="main">
+    <div id="desktop-icons" role="list" aria-label="Desktop icons"></div>
+    <div id="windows-container" aria-live="polite"></div>
+  </div>
+
+  <!-- ─── Taskbar ───────────────────────────────────── -->
+  <div id="taskbar" role="navigation" aria-label="Taskbar">
+    <button id="start-btn" aria-haspopup="true" aria-expanded="false" aria-controls="start-menu">
+      <span class="win-flag" aria-hidden="true">
+        <span class="flag-tl"></span><span class="flag-tr"></span>
+        <span class="flag-bl"></span><span class="flag-br"></span>
+      </span>
+      <span class="start-label">start</span>
+    </button>
+
+    <div id="taskbar-divider" aria-hidden="true"></div>
+    <div id="taskbar-windows" role="list" aria-label="Open windows"></div>
+
+    <div id="system-tray" aria-label="System tray">
+      <span class="tray-icon" title="Volume" aria-hidden="true">🔊</span>
+      <span id="clock" role="timer" aria-label="Current time"></span>
+    </div>
+  </div>
+
+  <!-- ─── Start Menu ────────────────────────────────── -->
+  <div id="start-menu" role="dialog" aria-label="Start Menu" hidden>
+    <div id="start-menu-header">
+      <div class="user-avatar" aria-hidden="true">🧑‍💻</div>
+      <span id="start-menu-username">MuhCodes</span>
+    </div>
+    <div id="start-menu-body">
+      <div id="start-menu-left" role="list"></div>
+      <div id="start-menu-separator" aria-hidden="true"></div>
+      <div id="start-menu-right" role="list"></div>
+    </div>
+    <div id="start-menu-footer">
+      <button class="footer-btn" onclick="doShutDown()">
+        <span aria-hidden="true">🔴</span> Shut Down
+      </button>
+    </div>
+  </div>
+
+  <!-- ─── Shut-down overlay (easter egg) ───────────── -->
+  <div id="shutdown-overlay" hidden aria-modal="true" role="dialog">
+    <div id="shutdown-dialog">
+      <div id="shutdown-logo" aria-hidden="true">
+        <span class="sd-flag">
+          <span class="flag-tl"></span><span class="flag-tr"></span>
+          <span class="flag-bl"></span><span class="flag-br"></span>
+        </span>
+        <span>Windows <em>XP</em></span>
+      </div>
+      <p>It is now safe to close your browser.</p>
+      <button onclick="document.getElementById('shutdown-overlay').hidden=true">
+        Wait — actually keep it open
+      </button>
+    </div>
+  </div>
+
+  <script src="content.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
