@@ -41,6 +41,7 @@ const SITE = {
     { id: "3d-printing",  label: "3D Printing",  icon: "🖨️" },
     { id: "electronics",  label: "Electronics",  icon: "⚡"  },
     { id: "fabrication",  label: "Fabrication",  icon: "🔧" },
+    { id: "kristofer",  label: "Kristofer",  icon: "🤵"  },
   ],
 
   // ── Blog posts ────────────────────────────────────────
@@ -172,6 +173,126 @@ void loop() {
         <p>Total material cost: ~$8. Way better than a generic plastic enclosure.</p>
       `
     },
-  ]
+
+    // ── Kristofer folder — one post per job ──────────────────────────────
+    {
+      id:      "job-munasafn",
+      title:   "Munasafn RVK Tool Library",
+      folder:  "kristofer",
+      date:    "2021-03-01",
+      excerpt: "Technical Lead · Chief Technology Officer · 5 yrs 2 months",
+      content: `
+        <h2>Munasafn RVK Tool Library</h2>
+        <p class="post-meta">📍 Reykjavík, Iceland &nbsp;·&nbsp; 5 years 2 months</p>
+
+        <h3>Chief Technology Officer</h3>
+        <p class="post-meta">August 2022 – Present</p>
+        <p>Leading the technical direction of the organisation — architecture decisions,
+        infrastructure, and tooling across all digital systems.</p>
+
+        <h3>Technical Lead</h3>
+        <p class="post-meta">March 2021 – Present</p>
+        <p>Hands-on technical leadership: building and maintaining the platforms that
+        power the tool library's operations and member-facing services.</p>
+      `
+    },
+
+    {
+      id:      "job-hopp",
+      title:   "Hopp",
+      folder:  "kristofer",
+      date:    "2019-05-01",
+      excerpt: "Head of Engineering · Franchise Consultant · 2 yrs 5 months",
+      content: `
+        <h2>Hopp</h2>
+        <p class="post-meta">📍 Reykjavík, Iceland &nbsp;·&nbsp; 2 years 5 months</p>
+
+        <h3>Head of Engineering</h3>
+        <p class="post-meta">May 2019 – May 2021</p>
+        <p>Built and led the engineering team at Hopp, overseeing product development
+        and technical operations across the platform.</p>
+
+        <h3>Franchise Consultant</h3>
+        <p class="post-meta">May 2021 – September 2021</p>
+        <p>Advised on technical requirements and processes for franchise operations
+        following the transition from the engineering leadership role.</p>
+      `
+    },
+
+    {
+      id:      "job-innovation-center",
+      title:   "Innovation Center Iceland",
+      folder:  "kristofer",
+      date:    "2019-01-01",
+      excerpt: "Technical Specialist · 5 months",
+      content: `
+        <h2>Innovation Center Iceland</h2>
+        <p class="post-meta">📍 Iceland &nbsp;·&nbsp; 5 months</p>
+
+        <h3>Technical Specialist</h3>
+        <p class="post-meta">January 2019 – May 2019</p>
+        <p>Provided programming and IT support for Verksmiðjan — an innovation
+        competition for children aged 13 to 16. Helped young participants bring
+        their project ideas to life through hands-on technical guidance.</p>
+      `
+    },
+
+    {
+      id:      "job-advania",
+      title:   "Advania Data Centers",
+      folder:  "kristofer",
+      date:    "2017-08-01",
+      excerpt: "Technician · 1 yr 6 months",
+      content: `
+        <h2>Advania Data Centers</h2>
+        <p class="post-meta">📍 Iceland &nbsp;·&nbsp; 1 year 6 months</p>
+
+        <h3>Technician</h3>
+        <p class="post-meta">August 2017 – January 2019</p>
+        <p>Data center operations and technical maintenance at one of Iceland's
+        leading data center providers.</p>
+      `
+    },
+
+    {
+      id:      "job-koder",
+      title:   "Kóder",
+      folder:  "kristofer",
+      date:    "2016-02-01",
+      excerpt: "Teacher · Vice Chairman · 3 years",
+      content: `
+        <h2>Kóder</h2>
+        <p class="post-meta">📍 Iceland &nbsp;·&nbsp; 3 years</p>
+
+        <h3>Vice Chairman</h3>
+        <p class="post-meta">June 2017 – January 2019</p>
+        <p>Board-level role helping shape the direction of Kóder's programmes
+        and community initiatives.</p>
+
+        <h3>Teacher</h3>
+        <p class="post-meta">February 2016 – January 2019</p>
+        <p>Teaching programming and technology skills as part of Kóder's
+        mission to spread coding education in Iceland.</p>
+      `
+    },
+
+    {
+      id:      "job-genesis",
+      title:   "Genesis Mining",
+      folder:  "kristofer",
+      date:    "2016-04-01",
+      excerpt: "Technician · 1 yr 5 months",
+      content: `
+        <h2>Genesis Mining</h2>
+        <p class="post-meta">📍 Iceland &nbsp;·&nbsp; 1 year 5 months</p>
+
+        <h3>Technician</h3>
+        <p class="post-meta">April 2016 – August 2017</p>
+        <p>Hardware operations and maintenance at one of the world's largest
+        cloud mining operations, based in Iceland.</p>
+      `
+    },
+
+  ],
 
 }; // ← end of SITE config

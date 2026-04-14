@@ -244,7 +244,7 @@ function openFolder(folderId) {
         <div class="post-item" role="button" tabindex="0"
              onclick="openPost('${post.id}')"
              onkeydown="if(event.key==='Enter')openPost('${post.id}')">
-          <span class="post-item-icon">📄</span>
+          <span class="post-item-icon">${folderId === 'kristofer' ? '🏢' : '📄'}</span>
           <div>
             <div class="post-item-title">${post.title}</div>
             <div class="post-item-meta">${formatDate(post.date)}</div>
