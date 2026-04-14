@@ -30,8 +30,8 @@ const SITE = {
   // Set any value to null to hide that icon from the desktop
   social: {
     github:    { url: "https://github.com/krissibt",          label: "GitHub"    },
-    instagram: { url: "https://instagram.com/yourusername",       label: "Instagram" },
-    linkedin:  { url: "https://linkedin.com/in/yourusername",     label: "LinkedIn"  },
+    instagram: { url: "https://instagram.com/kristoferHenry",       label: "Instagram" },
+    linkedin:  { url: "https://linkedin.com/in/kristofer-henry-aa2963165",     label: "LinkedIn"  },
   },
 
   // ── Desktop folders (project categories) ─────────────
