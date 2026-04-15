@@ -34,6 +34,12 @@ const SITE = {
     linkedin:  { url: "https://linkedin.com/in/kristofer-henry-aa2963165",     label: "LinkedIn"  },
   },
 
+  // ── External link shortcuts ──────────────────────────
+  // Each shortcut shows up as a desktop icon that opens a URL.
+  shortcuts: [
+    { id: "qr-site", label: "QR Generator", icon: "🔳", url: "http://kristofer.is/qr/" },
+  ],
+
   // ── Desktop folders (project categories) ─────────────
   // Each folder shows up as an icon on the desktop.
   // Clicking it opens a window listing all posts in that folder.

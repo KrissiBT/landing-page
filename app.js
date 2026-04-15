@@ -315,6 +315,12 @@ function renderDesktop() {
   // My Computer
   container.appendChild(makeIcon('💻', 'My Computer', openAbout));
 
+  // External link shortcuts
+  (SITE.shortcuts || []).forEach(shortcut => {
+    container.appendChild(makeIcon(shortcut.icon, shortcut.label,
+      () => window.open(shortcut.url, '_blank', 'noopener')));
+  });
+
   // Social icons
   Object.entries(SITE.social).forEach(([platform, info]) => {
     if (!info) return;
@@ -419,9 +425,20 @@ function renderStartMenu() {
       </div>
     `).join('');
 
+  const shortcutItems = (SITE.shortcuts || [])
+    .map(s => `
+      <div class="start-item" role="listitem" tabindex="0"
+           onclick="window.open('${s.url}','_blank','noopener');closeStartMenu()"
+           onkeydown="if(event.key==='Enter'){window.open('${s.url}','_blank','noopener');closeStartMenu()}">
+        <span class="start-item-icon">${s.icon}</span>
+        <span>${s.label}</span>
+      </div>
+    `).join('');
+
   right.innerHTML = `
     <div class="start-section-title">Connect</div>
     ${socialItems}
+    ${shortcutItems ? `<div class="start-separator"></div>${shortcutItems}` : ''}
   `;
 }
 
