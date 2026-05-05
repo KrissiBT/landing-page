@@ -23,31 +23,32 @@
 const SITE = {
 
   // ── Site identity ────────────────────────────────────
-  title: "MuhCodes Workshop",
-  subtitle: "3D Printing · Electronics · Fabrication",
+  title: "Kristofers Desktop",
+  subtitle: "3D Printing · Electronics · Fabrication · Software",
 
   // ── Social media ─────────────────────────────────────
   // Set any value to null to hide that icon from the desktop
   social: {
-    github:    { url: "https://github.com/krissibt",          label: "GitHub"    },
-    instagram: { url: "https://instagram.com/kristoferHenry",       label: "Instagram" },
-    linkedin:  { url: "https://linkedin.com/in/kristofer-henry-aa2963165",     label: "LinkedIn"  },
+    social: { url: "https://github.com/krissibt", label: "GitHub" },
+    instagram: { url: "https://instagram.com/kristoferHenry", label: "Instagram" },
+    linkedin: { url: "https://linkedin.com/in/kristofer-henry-aa2963165", label: "LinkedIn" },
   },
 
   // ── External link shortcuts ──────────────────────────
   // Each shortcut shows up as a desktop icon that opens a URL.
   shortcuts: [
-    { id: "qr-site", label: "QR Generator", icon: "🔳", url: "http://kristofer.is/qr/" },
+    { id: "", label: "", icon: "", url: "" },
+    { id: "gym", label: "Gym Map", icon: "💪", url: "http://kristofer.is/gymMap/" },
   ],
 
   // ── Desktop folders (project categories) ─────────────
   // Each folder shows up as an icon on the desktop.
   // Clicking it opens a window listing all posts in that folder.
   folders: [
-    { id: "3d-printing",  label: "3D Printing",  icon: "🖨️" },
-    { id: "electronics",  label: "Electronics",  icon: "⚡"  },
-    { id: "fabrication",  label: "Fabrication",  icon: "🔧" },
-    { id: "kristofer",  label: "Kristofer",  icon: "🤵"  },
+    { id: "", label: "", icon: "" },
+    { id: "", label: "", icon: "" },
+    { id: "", label: "", icon: "" },
+    { id: "", label: "", icon: "" },
   ],
 
   // ── Blog posts ────────────────────────────────────────
@@ -180,7 +181,6 @@ void loop() {
       `
     },
 
-    // ── Kristofer folder — one post per job ──────────────────────────────
     {
       id:      "job-munasafn",
       title:   "Munasafn RVK Tool Library",
