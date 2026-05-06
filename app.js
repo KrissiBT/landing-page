@@ -308,7 +308,7 @@ function renderDesktop() {
   container.innerHTML = '';
 
   // Folder icons
-  SITE.folders.forEach(folder => {
+  SITE.folders.filter(f => f.id).forEach(folder => {
     container.appendChild(makeIcon(folder.icon, folder.label, () => openFolder(folder.id)));
   });
 
@@ -316,7 +316,7 @@ function renderDesktop() {
   container.appendChild(makeIcon('💻', 'My Computer', openAbout));
 
   // External link shortcuts
-  (SITE.shortcuts || []).forEach(shortcut => {
+  (SITE.shortcuts || []).filter(s => s.id).forEach(shortcut => {
     container.appendChild(makeIcon(shortcut.icon, shortcut.label,
       () => window.open(shortcut.url, '_blank', 'noopener')));
   });
@@ -404,7 +404,7 @@ function renderStartMenu() {
       <span>My Computer</span>
     </div>
     <div class="start-separator"></div>
-    ${SITE.folders.map(f => `
+    ${SITE.folders.filter(f => f.id).map(f => `
       <div class="start-item" role="listitem" tabindex="0"
            onclick="openFolder('${f.id}');closeStartMenu()"
            onkeydown="if(event.key==='Enter'){openFolder('${f.id}');closeStartMenu()}">
@@ -426,6 +426,7 @@ function renderStartMenu() {
     `).join('');
 
   const shortcutItems = (SITE.shortcuts || [])
+    .filter(s => s.id)
     .map(s => `
       <div class="start-item" role="listitem" tabindex="0"
            onclick="window.open('${s.url}','_blank','noopener');closeStartMenu()"

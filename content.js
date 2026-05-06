@@ -37,18 +37,24 @@ const SITE = {
   // ── External link shortcuts ──────────────────────────
   // Each shortcut shows up as a desktop icon that opens a URL.
   shortcuts: [
-    { id: "", label: "", icon: "", url: "" },
-    { id: "gym", label: "Gym Map", icon: "💪", url: "http://kristofer.is/gymMap/" },
+    {
+      id:    "gym",
+      label: "Gym Map",
+      icon:  "💪",
+      url:   "http://kristofer.is/gymMap/",
+    },
+    {
+      id:    "qr",
+      label: "Open source qr code generator",
+      icon:  "🪛",
+      url:   "http://kristofer.is/qr/",
+    },
   ],
 
   // ── Desktop folders (project categories) ─────────────
   // Each folder shows up as an icon on the desktop.
   // Clicking it opens a window listing all posts in that folder.
   folders: [
-    { id: "", label: "", icon: "" },
-    { id: "", label: "", icon: "" },
-    { id: "", label: "", icon: "" },
-    { id: "", label: "", icon: "" },
   ],
 
   // ── Blog posts ────────────────────────────────────────
