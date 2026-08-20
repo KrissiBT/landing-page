@@ -29,7 +29,7 @@ const SITE = {
   // ── Social media ─────────────────────────────────────
   // Set any value to null to hide that icon from the desktop
   social: {
-    social: { url: "https://github.com/krissibt", label: "GitHub" },
+    github: { url: "https://github.com/krissibt", label: "GitHub" },
     instagram: { url: "https://instagram.com/kristoferHenry", label: "Instagram" },
     linkedin: { url: "https://linkedin.com/in/kristofer-henry-aa2963165", label: "LinkedIn" },
   },
@@ -55,6 +55,10 @@ const SITE = {
   // Each folder shows up as an icon on the desktop.
   // Clicking it opens a window listing all posts in that folder.
   folders: [
+    { id: "3d-printing", label: "3D Printing", icon: "🖨️" },
+    { id: "electronics", label: "Electronics", icon: "⚡" },
+    { id: "fabrication", label: "Fabrication", icon: "🔧" },
+    { id: "kristofer", label: "Kristofer", icon: "🤵" },
   ],
 
   // ── Blog posts ────────────────────────────────────────
