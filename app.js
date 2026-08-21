@@ -64,6 +64,14 @@ class WindowManager {
     const record = { el, state: 'open', prevRect: null };
     this.wins.set(id, record);
 
+    // Deep link: push a history entry for routable windows (before focus,
+    // which only replaces the current entry)
+    const route = hashFor(id);
+    if (route && !PREVIEW && location.hash !== route) {
+      suppressHash = true;
+      location.hash = route;
+    }
+
     this._addTaskbarBtn(id, title, iconHTML);
     this.focus(id);
     if (!isMobile()) this._makeDraggable(el, id);
@@ -75,6 +83,14 @@ class WindowManager {
     win.el.remove();
     document.getElementById('twbtn-' + id)?.remove();
     this.wins.delete(id);
+
+    // Deep link: reflect the window now on top (or none)
+    let topId = null, topZ = -1;
+    this.wins.forEach((w, wid) => {
+      const z = parseInt(w.el.style.zIndex) || 0;
+      if (w.state !== 'minimized' && z > topZ) { topZ = z; topId = wid; }
+    });
+    setHash(topId ? hashFor(topId) : '');
   }
 
   minimize(id) {
@@ -114,6 +130,8 @@ class WindowManager {
     });
     const win = this.wins.get(id);
     if (win) win.el.style.zIndex = ++this.zTop;
+    const h = hashFor(id);
+    if (h) setHash(h);
   }
 
   /* ── Internals ──────────────────────────────────── */
@@ -228,6 +246,103 @@ class WindowManager {
 const WM = new WindowManager();
 
 /* ════════════════════════════════════════════════════
+   ROUTER  —  deep links   #post/<id>  #folder/<id>  #about
+   ════════════════════════════════════════════════════ */
+
+// True when embedded as a live preview inside the editor
+const PREVIEW = new URLSearchParams(location.search).has('preview') && window.parent !== window;
+
+let suppressHash = false;   // ignore the next hashchange we caused ourselves
+
+function hashFor(id) {
+  if (id === 'about') return '#about';
+  if (SITE.posts.some(p => p.id === id))   return '#post/' + id;
+  if (SITE.folders.some(f => f.id === id)) return '#folder/' + id;
+  return '';
+}
+
+function setHash(h) {
+  if (PREVIEW) return;
+  const current = location.hash;
+  if (current === h || (!h && !current)) return;
+  suppressHash = true;
+  history.replaceState(null, '', h || location.pathname + location.search);
+  // replaceState doesn't fire hashchange, so clear the guard ourselves
+  suppressHash = false;
+}
+
+function applyHash() {
+  const raw = location.hash.slice(1);
+  if (!raw) return;
+  const [kind, ...rest] = raw.split('/');
+  const id = decodeURIComponent(rest.join('/'));
+
+  if (kind === 'about') { openAbout(); return; }
+
+  if (kind === 'post') {
+    const post = SITE.posts.find(p => p.id === id);
+    if (post) {
+      if (!isMobile()) openFolder(post.folder);   // give desktop users context
+      openPost(post.id);
+      return;
+    }
+  } else if (kind === 'folder') {
+    if (SITE.folders.some(f => f.id === id)) { openFolder(id); return; }
+  }
+
+  // Unknown route
+  setHash('');
+  openNotFound(raw);
+}
+
+function openNotFound(what) {
+  WM.open('not-found', 'Not found', '⚠️', `
+    <div class="about-content">
+      <p><strong>The item could not be found.</strong></p>
+      <p style="font-family:monospace;color:#555;word-break:break-all">#${escapeHtml(what)}</p>
+      <p>It may have been moved or removed. Browse the desktop folders instead.</p>
+    </div>
+  `, { width: 380, height: 220 });
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+
+function postLink(postId) {
+  return location.origin + location.pathname + location.search + '#post/' + encodeURIComponent(postId);
+}
+
+function copyPostLink(postId, btn) {
+  const url = postLink(postId);
+  const done = () => {
+    if (!btn) return;
+    const orig = btn.textContent;
+    btn.textContent = '✔ Copied!';
+    btn.disabled = true;
+    setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 1500);
+  };
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(url).then(done).catch(() => fallbackCopy(url, done));
+  } else {
+    fallbackCopy(url, done);
+  }
+}
+
+function fallbackCopy(text, done) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); } catch {}
+  ta.remove();
+  done();
+}
+
+/* ════════════════════════════════════════════════════
    CONTENT RENDERERS
    ════════════════════════════════════════════════════ */
 
@@ -265,9 +380,15 @@ function openPost(postId) {
   const post = SITE.posts.find(p => p.id === postId);
   if (!post) return;
 
-  WM.open(postId, post.title, '📄',
-    `<div class="post-content">${post.content}</div>`,
-    { width: 620, height: 500 });
+  WM.open(postId, post.title, '📄', `
+    <div class="post-wrap">
+      <div class="post-content">${post.content}</div>
+      <div class="window-statusbar post-statusbar">
+        <span>${formatDate(post.date)}</span>
+        <button class="copy-link-btn" onclick="copyPostLink('${post.id}', this)" title="Copy a link to this post">🔗 Copy link</button>
+      </div>
+    </div>
+  `, { width: 620, height: 500 });
 }
 
 function openAbout() {
@@ -504,6 +625,13 @@ function init() {
 
   // Render start menu
   renderStartMenu();
+
+  // Deep links: open whatever the URL points at, and follow back/forward
+  applyHash();
+  window.addEventListener('hashchange', () => {
+    if (suppressHash) { suppressHash = false; return; }
+    applyHash();
+  });
 
   // Update clock immediately, then every 30s
   updateClock();

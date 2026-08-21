@@ -528,6 +528,30 @@ html, body {
 .post-content li { font-size: 12px; margin-bottom: 4px; }
 .post-content a  { color: #0060C0; }
 .post-content a:hover { color: #003090; }
+.post-content img { max-width: 100%; height: auto; display: block; margin: 10px 0; }
+
+/* Post layout: content fills the window, status bar pinned to the bottom */
+.post-wrap { display: flex; flex-direction: column; min-height: 100%; }
+.post-wrap .post-content { flex: 1; }
+.post-statusbar {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.copy-link-btn {
+  padding: 1px 8px;
+  border: 1px solid #7a7a7a;
+  border-radius: 3px;
+  background: linear-gradient(#fff, #ece9d8);
+  font-family: var(--font);
+  font-size: 11px;
+  cursor: pointer;
+}
+.copy-link-btn:hover { border-color: #316AC5; background: linear-gradient(#fff, #dbe9ff); }
+.copy-link-btn:disabled { color: #2a7a2a; cursor: default; }
 
 .post-content pre {
   background: #1e1e1e;
