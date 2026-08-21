@@ -331,6 +331,74 @@ function copyPostLink(postId, btn) {
   }
 }
 
+/* ════════════════════════════════════════════════════
+   EDITOR LIVE PREVIEW  (only when embedded by editor/)
+   ════════════════════════════════════════════════════ */
+if (PREVIEW) {
+  window.addEventListener('message', (e) => {
+    if (e.origin !== location.origin || !e.data || typeof e.data.type !== 'string') return;
+    const m = e.data;
+
+    if (m.type === 'preview:site' && m.site) {
+      // SITE is a const — mutate in place, then re-render the desktop.
+      Object.keys(SITE).forEach(k => delete SITE[k]);
+      Object.assign(SITE, m.site);
+      document.title = SITE.title;
+      renderDesktop();
+      renderStartMenu();
+      // Re-render any open folder windows so lists reflect the new data.
+      [...WM.wins.keys()].forEach(id => {
+        if (SITE.folders.some(f => f.id === id)) { WM.close(id); openFolder(id); }
+        else if (!SITE.posts.some(p => p.id === id) && id !== 'about') WM.close(id);
+      });
+      if (m.focus) previewShowPost(m.focus);
+    }
+
+    if (m.type === 'preview:post' && m.post) {
+      const i = SITE.posts.findIndex(p => p.id === m.post.id);
+      if (i >= 0) SITE.posts[i] = m.post; else SITE.posts.push(m.post);
+      previewShowPost(m.post.id);
+    }
+
+    if (m.type === 'preview:open' && m.id) {
+      if (SITE.folders.some(f => f.id === m.id)) { WM.close(m.id); openFolder(m.id); }
+      else if (m.id === 'about') { WM.close('about'); openAbout(); }
+    }
+
+    if (m.type === 'preview:closeAll') {
+      [...WM.wins.keys()].forEach(id => WM.close(id));
+    }
+  });
+
+  // Re-open a post window in place, preserving scroll position.
+  function previewShowPost(id) {
+    const existing = WM.wins.get(id);
+    const scroll = existing ? existing.el.querySelector('.window-content')?.scrollTop : 0;
+    const rect = existing ? {
+      left: existing.el.style.left, top: existing.el.style.top,
+      width: existing.el.style.width, height: existing.el.style.height,
+      maximized: existing.state === 'maximized',
+    } : null;
+    if (existing) WM.close(id);
+    openPost(id);
+    const win = WM.wins.get(id);
+    if (!win) return;
+    if (rect) {
+      if (rect.maximized) WM.toggleMaximize(id);
+      else Object.assign(win.el.style, { left: rect.left, top: rect.top, width: rect.width, height: rect.height });
+    } else if (!isMobile()) {
+      // First open: fill most of the preview frame.
+      Object.assign(win.el.style, { left: '24px', top: '16px', width: 'min(720px, calc(100% - 48px))', height: 'calc(100% - 80px)' });
+    }
+    const content = win.el.querySelector('.window-content');
+    if (content && scroll) content.scrollTop = scroll;
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    parent.postMessage({ type: 'preview:ready' }, location.origin);
+  });
+}
+
 function fallbackCopy(text, done) {
   const ta = document.createElement('textarea');
   ta.value = text;

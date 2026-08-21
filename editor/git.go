@@ -30,7 +30,8 @@ type gitStatus struct {
 	Branch    string     `json:"branch"`
 	Ahead     int        `json:"ahead"`
 	Behind    int        `json:"behind"`
-	Dirty     []string   `json:"dirty"` // "XY path" lines from --porcelain
+	Dirty     []string   `json:"dirty"` // managed files (content.js, assets/images) with changes
+	Other     int        `json:"other"` // changed files the editor does not stage
 	Last      *gitCommit `json:"last,omitempty"`
 	Error     string     `json:"error,omitempty"`
 }
@@ -73,8 +74,13 @@ func (a *app) status() gitStatus {
 			}
 			continue
 		}
-		if strings.TrimSpace(line) != "" {
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
+		if isManagedPath(line) {
 			st.Dirty = append(st.Dirty, line)
+		} else {
+			st.Other++
 		}
 	}
 	if out, err := a.git("log", "-1", "--format=%h%x00%s%x00%cr"); err == nil {
@@ -84,6 +90,20 @@ func (a *app) status() gitStatus {
 		}
 	}
 	return st
+}
+
+// isManagedPath reports whether a porcelain status line refers to a file the
+// editor stages on commit.
+func isManagedPath(line string) bool {
+	if len(line) < 4 {
+		return false
+	}
+	path := strings.TrimSpace(line[3:])
+	if i := strings.Index(path, " -> "); i >= 0 { // renames
+		path = path[i+4:]
+	}
+	path = strings.Trim(path, "\"")
+	return path == "content.js" || strings.HasPrefix(path, "assets/images/") || path == "assets/images"
 }
 
 func (a *app) handleGitStatus(w http.ResponseWriter, r *http.Request) {
