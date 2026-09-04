@@ -140,7 +140,7 @@ const SITE = {
       "folder": "random-stuff",
       "date": "2026-09-04",
       "excerpt": "",
-      "content": "<h1>I needed a font for branding my leatherman so i had claude help me generate one </h1>\n<img src=\"assets/images/preview.png\" alt=\"\">\nlink here <a href=\"http://kristofer.is/MultitoolHeavy.ttf\" target=\"_blank\" rel=\"noopener\">Multy tool heavy </a>"
+      "content": "<h1>I needed a font for branding my leatherman so i had claude help me generate one </h1>\n<img src=\"assets/images/preview.png\" alt=\"\">\nlink here <a href=\"http://kristofer.is/MultitoolHeavy.ttf\" target=\"_blank\" rel=\"noopener\">Multi tool heavy </a>"
     }
   ]
 }; // ← end of SITE config
