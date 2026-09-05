@@ -429,8 +429,8 @@ function openFolder(folderId) {
              onkeydown="if(event.key==='Enter')openPost('${post.id}')">
           <span class="post-item-icon">${folderId === 'kristofer' ? '🏢' : '📄'}</span>
           <div>
-            <div class="post-item-title">${post.title}</div>
-            <div class="post-item-meta">${formatDate(post.date)}</div>
+            <div class="post-item-title">${post.title}${post.wip ? '<span class="post-item-wip" title="Work in progress">🚧</span>' : ''}</div>
+            <div class="post-item-meta">${formatDate(post.date)}${latestUpdate(post) ? ` &nbsp;·&nbsp; updated ${formatDateTime(latestUpdate(post).date)}` : ''}</div>
             <div class="post-item-excerpt">${post.excerpt || ''}</div>
           </div>
         </div>
@@ -448,11 +448,29 @@ function openPost(postId) {
   const post = SITE.posts.find(p => p.id === postId);
   if (!post) return;
 
+  const updates = sortedUpdates(post);
+  const updatesHtml = updates.length ? `
+      <section class="post-updates">
+        ${updates.map(u => `
+        <div class="post-update">
+          <div class="post-update-head">
+            <span class="post-update-label">🔧 Update</span>
+            <time datetime="${u.date}">${formatDateTime(u.date)}</time>
+          </div>
+          <div class="post-update-body">${u.content || ''}</div>
+        </div>`).join('')}
+      </section>` : '';
+  const latest = updates[updates.length - 1];
+
   WM.open(postId, post.title, '📄', `
     <div class="post-wrap">
-      <div class="post-content">${post.content}</div>
+      <div class="post-content">
+        ${post.wip ? '<div class="post-wip-badge">🚧 Work in progress</div>' : ''}
+        ${post.content}
+        ${updatesHtml}
+      </div>
       <div class="window-statusbar post-statusbar">
-        <span>${formatDate(post.date)}</span>
+        <span>${formatDate(post.date)}${latest ? ` &nbsp;·&nbsp; Updated ${formatDateTime(latest.date)}` : ''}</span>
         <button class="copy-link-btn" onclick="copyPostLink('${post.id}', this)" title="Copy a link to this post">🔗 Copy link</button>
       </div>
     </div>
@@ -679,6 +697,28 @@ function formatDate(dateStr) {
       year: 'numeric', month: 'long', day: 'numeric'
     });
   } catch { return dateStr; }
+}
+
+// "YYYY-MM-DDTHH:MM" → "September 5, 2026, 2:30 PM"; plain dates fall back to formatDate.
+function formatDateTime(str) {
+  if (!str) return '';
+  if (!str.includes('T')) return formatDate(str);
+  try {
+    return new Date(str).toLocaleString('en-US', {
+      year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit'
+    });
+  } catch { return str; }
+}
+
+// Progress updates of a post, oldest first (date-only entries sort as midnight).
+function sortedUpdates(post) {
+  const key = u => (u.date || '').includes('T') ? u.date : (u.date || '') + 'T00:00';
+  return (post.updates || []).filter(u => u && u.date).slice().sort((a, b) => key(a).localeCompare(key(b)));
+}
+
+function latestUpdate(post) {
+  const u = sortedUpdates(post);
+  return u[u.length - 1];
 }
 
 /* ════════════════════════════════════════════════════

@@ -144,6 +144,9 @@ func TestValidate(t *testing.T) {
 		{"missing folder", func(s *Site) { s.Posts[0].Folder = "nope" }, "does not exist"},
 		{"bad date", func(s *Site) { s.Posts[0].Date = "15/01/2024" }, "YYYY-MM-DD"},
 		{"fake date", func(s *Site) { s.Posts[0].Date = "2024-13-45" }, "not a real date"},
+		{"update no date", func(s *Site) { s.Posts[0].Updates = []Update{{Content: "x"}} }, "update #1: date is required"},
+		{"update bad date", func(s *Site) { s.Posts[0].Updates = []Update{{Date: "2024-01-15 10:00"}} }, "YYYY-MM-DDTHH:MM"},
+		{"update fake time", func(s *Site) { s.Posts[0].Updates = []Update{{Date: "2024-01-15T25:00"}} }, "not a real date/time"},
 		{"empty title", func(s *Site) { s.Title = " " }, "title is required"},
 		{"null social", func(s *Site) { s.Social["x"] = nil }, "null"},
 	}
@@ -157,6 +160,12 @@ func TestValidate(t *testing.T) {
 	}
 	if errs := sampleSite().Validate(); len(errs) != 0 {
 		t.Errorf("valid site reported errors: %v", errs)
+	}
+	ok := sampleSite()
+	ok.Posts[0].WIP = true
+	ok.Posts[0].Updates = []Update{{Date: "2024-01-15T10:30", Content: "<p>a</p>"}, {Date: "2024-01-16", Content: ""}}
+	if errs := ok.Validate(); len(errs) != 0 {
+		t.Errorf("valid updates reported errors: %v", errs)
 	}
 	st := NewStore(filepath.Join(t.TempDir(), "c.js"), "")
 	bad := sampleSite()
@@ -216,5 +225,33 @@ func TestMigrateLegacy(t *testing.T) {
 	}
 	if errs := s.Validate(); len(errs) != 0 {
 		t.Errorf("migrated site invalid: %v", errs)
+	}
+}
+
+func TestUpdatesRoundTrip(t *testing.T) {
+	s := sampleSite()
+	s.Posts[0].WIP = true
+	s.Posts[0].Updates = []Update{{Date: "2024-01-15T10:30", Content: "<p>reprinted</p>"}}
+	out, err := encodeContentJS("", s)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(out), `"wip": true`) || !strings.Contains(string(out), `"updates": [`) {
+		t.Fatalf("wip/updates missing from output:\n%s", out)
+	}
+	_, got, err := decodeContentJS(string(out))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !got.Posts[0].WIP || len(got.Posts[0].Updates) != 1 || got.Posts[0].Updates[0].Date != "2024-01-15T10:30" {
+		t.Fatalf("updates lost in round trip: %+v", got.Posts[0])
+	}
+	// Posts without updates must not gain the keys.
+	plain, err := encodeContentJS("", sampleSite())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(plain), `"wip"`) || strings.Contains(string(plain), `"updates"`) {
+		t.Fatalf("plain post emitted wip/updates keys:\n%s", plain)
 	}
 }

@@ -20,6 +20,11 @@ const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const today = () => new Date().toISOString().slice(0, 10);
+// Local wall-clock time as "YYYY-MM-DDTHH:MM" (what <input type=datetime-local> wants).
+const nowLocal = () => {
+  const d = new Date(), z = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}T${z(d.getHours())}:${z(d.getMinutes())}`;
+};
 const slugify = s => s.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
   .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60);
 
@@ -162,7 +167,7 @@ function renderSidebar() {
         <div class="tree-children">
           ${posts.length ? posts.map(p => `
             <button class="side-item post ${isSel('post', p.id) ? 'active' : ''} ${postDirty(p) ? 'dirty' : ''}" data-sel="post" data-id="${esc(p.id)}" title="${esc(p.id)}">
-              <span class="ico">📄</span><span class="lbl">${esc(p.title || '(untitled)')}</span>
+              <span class="ico">${p.wip ? '🚧' : '📄'}</span><span class="lbl">${esc(p.title || '(untitled)')}</span>
               <span class="sub">${esc((p.date || '').slice(0, 7))}</span>
             </button>`).join('') : '<div class="tree-empty">empty</div>'}
         </div>
@@ -279,6 +284,10 @@ function renderPostForm(post) {
           <select data-bind="folder">${folderMissing ? `<option value="${esc(post.folder)}" selected>⚠️ ${esc(post.folder)} (missing)</option>` : ''}${folders}</select></div>
         <div class="field"><label>Date</label><input type="date" data-bind="date" value="${esc(post.date)}"></div>
       </div>
+      <div class="field wip-field">
+        <label class="check"><input type="checkbox" id="post-wip" ${post.wip ? 'checked' : ''}> 🚧 Work in progress
+          <span class="help" style="display:inline">(shows a badge; add dated progress updates below)</span></label>
+      </div>
 
       <div class="field">
         <label>Content (HTML)</label>
@@ -305,6 +314,14 @@ function renderPostForm(post) {
           <span id="content-stats"></span>
         </div>
       </div>
+    </div>
+
+    <div class="card" id="updates-card">
+      <h2>🔧 Progress updates<span class="spacer"></span>
+        <button class="btn-lite" id="btn-add-update">＋ Add update</button>
+      </h2>
+      <p class="help">Dated entries shown below the post, oldest first. Each gets its own divider; the site sorts them by date, so you can change a date or time later.</p>
+      <div id="updates-body"></div>
     </div>`;
 
   const originalId = post.id;
@@ -333,6 +350,19 @@ function renderPostForm(post) {
   setupTextarea(ta, post);
   updateStats();
 
+  $('#post-wip').addEventListener('change', e => {
+    if (e.target.checked) post.wip = true; else delete post.wip;
+    renderSidebar(); updateSaveStatus(); schedulePreview(post);
+  });
+  $('#btn-add-update').onclick = () => {
+    (post.updates ||= []).push({ date: nowLocal(), content: '' });
+    renderUpdates(post);
+    updateSaveStatus(); schedulePreview(post);
+    const tas = $$('#updates-body textarea');
+    tas[tas.length - 1]?.focus();
+  };
+  renderUpdates(post);
+
   $('#btn-delete').onclick = async () => {
     if (await confirmDialog('Delete post', `Delete "${post.title || post.id}"? This is written to content.js on the next save.`)) {
       state.site.posts = state.site.posts.filter(p => p !== post);
@@ -359,9 +389,64 @@ function publicBase() {
   return localStorage.getItem('publicBase') || (location.origin + '/site/');
 }
 
+/* ── Progress updates (dated entries on WIP posts) ─ */
+function renderUpdates(post) {
+  const body = $('#updates-body');
+  if (!body) return;
+  const list = post.updates || [];
+  const changed = () => { updateSaveStatus(); schedulePreview(post); };
+
+  if (!list.length) {
+    body.innerHTML = '<div class="updates-empty">No updates yet. Click “Add update” to log progress with a date and time.</div>';
+    return;
+  }
+  body.innerHTML = list.map((u, i) => `
+    <div class="update-entry" data-i="${i}">
+      <div class="update-head">
+        <label>📅 <input type="datetime-local" step="60" class="update-date" value="${esc(u.date && u.date.includes('T') ? u.date : (u.date ? u.date + 'T00:00' : ''))}"></label>
+        <span class="update-num">#${i + 1}</span>
+        <span class="grow"></span>
+        <button class="btn-lite sm" data-move="-1" title="Move up" ${i === 0 ? 'disabled' : ''}>▲</button>
+        <button class="btn-lite sm" data-move="1" title="Move down" ${i === list.length - 1 ? 'disabled' : ''}>▼</button>
+        <button class="btn-lite sm danger" data-del title="Remove this update">Delete</button>
+      </div>
+      <div class="toolbar update-toolbar">
+        <button data-wrap="<h3>|</h3>" title="Sub-heading"><b>H3</b></button>
+        <button data-wrap="<p>|</p>" title="Paragraph">¶</button>
+        <button data-wrap="<strong>|</strong>" title="Bold (Ctrl+B)"><b>B</b></button>
+        <button data-wrap="<em>|</em>" title="Italic (Ctrl+I)"><i>I</i></button>
+        <span class="sep"></span>
+        <button data-block="<ul>\n  <li>|</li>\n</ul>" title="Bullet list">• List</button>
+        <button data-action="link" title="Link (Ctrl+K)">🔗 Link</button>
+        <button data-action="image" title="Insert image">🖼️ Image</button>
+      </div>
+      <textarea class="update-content" spellcheck="true" placeholder="<p>What changed since last time? Drop or paste images here.</p>">${esc(u.content || '')}</textarea>
+    </div>`).join('');
+
+  $$('.update-entry', body).forEach(entry => {
+    const i = Number(entry.dataset.i), u = list[i];
+    const ta = $('textarea', entry);
+    setupTextarea(ta, post, $('.update-toolbar', entry));
+    ta.addEventListener('input', () => { u.content = ta.value; changed(); });
+    $('.update-date', entry).addEventListener('input', e => { u.date = e.target.value; changed(); });
+    $$('[data-move]', entry).forEach(btn => btn.onclick = () => {
+      const j = i + Number(btn.dataset.move);
+      if (j < 0 || j >= list.length) return;
+      [list[i], list[j]] = [list[j], list[i]];
+      renderUpdates(post); changed();
+    });
+    $('[data-del]', entry).onclick = async () => {
+      const when = u.date ? u.date.replace('T', ' ') : 'this update';
+      if (!(await confirmDialog('Delete update', `Remove the update from ${when}? This is written to content.js on the next save.`))) return;
+      list.splice(i, 1);
+      if (!list.length) delete post.updates;
+      renderUpdates(post); changed();
+    };
+  });
+}
+
 /* ── Textarea helpers: toolbar, tab, shortcuts, drop/paste ── */
-function setupTextarea(ta, post) {
-  const toolbar = $('#toolbar');
+function setupTextarea(ta, post, toolbar = $('#toolbar')) {
 
   function replaceSel(before, after = '', placeholder = '') {
     const s = ta.selectionStart, e = ta.selectionEnd;
@@ -395,7 +480,7 @@ function setupTextarea(ta, post) {
     }
   }
 
-  toolbar.addEventListener('click', e => {
+  if (toolbar) toolbar.addEventListener('click', e => {
     const btn = e.target.closest('button');
     if (!btn) return;
     e.preventDefault();

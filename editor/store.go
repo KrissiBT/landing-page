@@ -34,13 +34,22 @@ type Folder struct {
 	Icon  string `json:"icon"`
 }
 
-type Post struct {
-	ID      string `json:"id"`
-	Title   string `json:"title"`
-	Folder  string `json:"folder"`
+// Update is a dated progress entry appended to a work-in-progress post.
+// Date is either YYYY-MM-DD or YYYY-MM-DDTHH:MM (local time, no zone).
+type Update struct {
 	Date    string `json:"date"`
-	Excerpt string `json:"excerpt"`
 	Content string `json:"content"`
+}
+
+type Post struct {
+	ID      string   `json:"id"`
+	Title   string   `json:"title"`
+	Folder  string   `json:"folder"`
+	Date    string   `json:"date"`
+	Excerpt string   `json:"excerpt"`
+	WIP     bool     `json:"wip,omitempty"`
+	Updates []Update `json:"updates,omitempty"`
+	Content string   `json:"content"`
 }
 
 type Site struct {
@@ -224,9 +233,18 @@ func (s *Site) ordered() orderedSite {
 /* ── Validation ─────────────────────────────────────────────────────────── */
 
 var (
-	slugRe = regexp.MustCompile(`^[a-z0-9][a-z0-9-]*$`)
-	dateRe = regexp.MustCompile(`^\d{4}-\d{2}-\d{2}$`)
+	slugRe     = regexp.MustCompile(`^[a-z0-9][a-z0-9-]*$`)
+	dateRe     = regexp.MustCompile(`^\d{4}-\d{2}-\d{2}$`)
+	dateTimeRe = regexp.MustCompile(`^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2})?$`)
 )
+
+// parseUpdateDate accepts YYYY-MM-DD or YYYY-MM-DDTHH:MM.
+func parseUpdateDate(v string) (time.Time, error) {
+	if strings.Contains(v, "T") {
+		return time.Parse("2006-01-02T15:04", v)
+	}
+	return time.Parse("2006-01-02", v)
+}
 
 // reservedIDs are window ids app.js uses for its own windows.
 var reservedIDs = map[string]bool{"about": true, "not-found": true}
@@ -287,6 +305,16 @@ func (s *Site) Validate() []string {
 				errs = append(errs, fmt.Sprintf("%s: date %q must be YYYY-MM-DD", what, p.Date))
 			} else if _, err := time.Parse("2006-01-02", p.Date); err != nil {
 				errs = append(errs, fmt.Sprintf("%s: date %q is not a real date", what, p.Date))
+			}
+		}
+		for j, u := range p.Updates {
+			uw := fmt.Sprintf("%s: update #%d", what, j+1)
+			if u.Date == "" {
+				errs = append(errs, uw+": date is required")
+			} else if !dateTimeRe.MatchString(u.Date) {
+				errs = append(errs, fmt.Sprintf("%s: date %q must be YYYY-MM-DD or YYYY-MM-DDTHH:MM", uw, u.Date))
+			} else if _, err := parseUpdateDate(u.Date); err != nil {
+				errs = append(errs, fmt.Sprintf("%s: date %q is not a real date/time", uw, u.Date))
 			}
 		}
 	}

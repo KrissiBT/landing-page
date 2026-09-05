@@ -575,6 +575,55 @@ html, body {
   margin-bottom: 14px !important;
 }
 
+.post-content hr { border: 0; border-top: 1px solid #ccc; margin: 14px 0; }
+.post-content ol { margin: 0 0 10px 20px; }
+
+/* Work-in-progress badge */
+.post-wip-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: bold;
+  color: #5a4a00;
+  background: #fff3b0;
+  border: 1px solid #c9a400;
+  border-radius: 3px;
+  padding: 1px 8px;
+  margin-bottom: 10px;
+}
+.post-item-wip { font-size: 10px; margin-left: 6px; }
+
+/* Progress updates: dated entries appended below the main post */
+.post-updates {
+  margin-top: 24px;
+  border-top: 1px solid #7f9db9;
+  padding-top: 6px;
+}
+.post-updates::before {
+  content: 'Progress updates';
+  display: block;
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: #1a1a6e;
+}
+.post-update {
+  border-top: 2px dashed #b9b9b9;
+  margin-top: 14px;
+  padding-top: 10px;
+}
+.post-update-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 11px;
+  color: #555;
+  margin-bottom: 8px;
+}
+.post-update-label { font-weight: bold; }
+.post-update-head time { color: #888; }
+
 /* About window */
 .about-content {
   padding: 24px;
