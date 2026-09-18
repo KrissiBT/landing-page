@@ -62,7 +62,7 @@ html, body {
   flex-wrap: wrap;
   align-content: flex-start;
   height: 100%;
-  padding: 12px 8px;
+  padding: 12px 270px 12px 8px; /* right gutter keeps icons clear of #whats-new */
   gap: 6px;
   pointer-events: none; /* let clicks fall through to desktop bg */
 }
@@ -109,6 +109,80 @@ html, body {
   line-height: 1.2;
   max-width: 72px;
 }
+
+/* ── "What's new" desktop gadget ───────────────── */
+#whats-new {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 230px;
+  z-index: 5;                 /* above wallpaper, below windows (z ≥ 100) */
+  pointer-events: auto;
+  background: var(--xp-panel);
+  border: 2px solid var(--xp-blue-lo);
+  border-radius: 6px 6px 3px 3px;
+  box-shadow: var(--win-shadow);
+  font-family: var(--font);
+  font-size: 12px;
+  overflow: hidden;
+}
+
+.gadget-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+  padding: 0 8px;
+  background: linear-gradient(180deg,
+    #2E93F8 0%, #1668D4 4%, #1050D2 50%,
+    #0E48CC 90%, #1460D8 95%, #2070E0 100%);
+  color: #fff;
+  font-size: 11px;
+  font-weight: bold;
+  text-shadow: 1px 1px 2px rgba(0,0,0,.5);
+  user-select: none;
+}
+
+.gadget-icon { font-size: 13px; }
+
+.gadget-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.gadget-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+  border-radius: 2px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.gadget-item:hover  { background: #EEF3FB; border-color: #316AC5; }
+.gadget-item:active { background: #D8E8F8; }
+.gadget-item:focus-visible { outline: 1px dotted #000; outline-offset: -3px; }
+
+.gadget-item-icon { font-size: 18px; flex-shrink: 0; }
+
+.gadget-item-text { min-width: 0; }
+
+.gadget-item-title {
+  font-size: 12px;
+  font-weight: bold;
+  color: #000;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gadget-item-meta { font-size: 10px; color: #555; margin-top: 1px; }
 
 /* ══════════════════════════════════════════════════
    TASKBAR
@@ -749,6 +823,35 @@ html, body {
   flex-shrink: 0;
 }
 
+/* ── Resize handles (desktop only) ─────────────── */
+.resize-handle { position: absolute; z-index: 2; }
+.rh-n  { top: 0;    left: 10px; right: 10px;  height: 5px; cursor: n-resize; }
+.rh-s  { bottom: 0; left: 10px; right: 10px;  height: 5px; cursor: s-resize; }
+.rh-e  { right: 0;  top: 10px;  bottom: 10px; width: 5px;  cursor: e-resize; }
+.rh-w  { left: 0;   top: 10px;  bottom: 10px; width: 5px;  cursor: w-resize; }
+.rh-ne { top: 0;    right: 0;  width: 10px; height: 10px; cursor: ne-resize; }
+.rh-nw { top: 0;    left: 0;   width: 10px; height: 10px; cursor: nw-resize; }
+.rh-se { bottom: 0; right: 0;  width: 14px; height: 14px; cursor: se-resize; }
+.rh-sw { bottom: 0; left: 0;   width: 10px; height: 10px; cursor: sw-resize; }
+
+/* XP-style grip in the bottom-right corner */
+.rh-se::after {
+  content: '';
+  position: absolute;
+  right: 2px; bottom: 2px;
+  width: 9px; height: 9px;
+  background:
+    radial-gradient(circle at 1.5px 1.5px, #7a7a72 1px, transparent 1.3px) 0 0 / 3px 3px;
+  clip-path: polygon(100% 0, 100% 100%, 0 100%);
+  pointer-events: none;
+}
+
+.window-maximized .resize-handle { display: none; }
+
+/* Don't let iframes/text eat mouse events mid-resize */
+.window-resizing { user-select: none; }
+.window-resizing .window-content { pointer-events: none; }
+
 /* ── Scrollbar styling (Webkit) ─────────────────── */
 .window-content::-webkit-scrollbar { width: 16px; }
 .window-content::-webkit-scrollbar-track { background: var(--xp-panel); }
@@ -826,12 +929,20 @@ html, body {
     justify-content: flex-start;
     align-content: flex-start;
     height: auto;
-    min-height: 100%;
+    min-height: auto;
     padding: 16px;
     gap: 12px;
   }
 
   .desktop-icon { width: 72px; }
+
+  /* Gadget flows below the icon grid on mobile */
+  #whats-new {
+    position: static;
+    width: auto;
+    margin: 0 16px 16px;
+  }
+  .gadget-body { max-height: none; }
 
   /* Windows go full-screen on mobile */
   .window {
@@ -844,6 +955,8 @@ html, body {
     border-right: none !important;
     border-top: none !important;
   }
+
+  .resize-handle { display: none; }
 
   /* Larger title bar for touch */
   .window-titlebar { height: 36px; padding: 0 4px 0 8px; }

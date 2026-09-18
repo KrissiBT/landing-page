@@ -74,7 +74,7 @@ class WindowManager {
 
     this._addTaskbarBtn(id, title, iconHTML);
     this.focus(id);
-    if (!isMobile()) this._makeDraggable(el, id);
+    if (!isMobile()) { this._makeDraggable(el, id); this._makeResizable(el, id); }
   }
 
   close(id) {
@@ -170,6 +170,7 @@ class WindowManager {
         <button class="menu-btn">Help</button>
       </div>
       <div class="window-content">${bodyHTML}</div>
+      ${['n','s','e','w','ne','nw','se','sw'].map(d => `<div class="resize-handle rh-${d}" data-dir="${d}"></div>`).join('')}
     `;
 
     el.querySelector('.btn-close').onclick    = () => this.close(id);
@@ -235,6 +236,59 @@ class WindowManager {
     const onUp = () => { dragging = false; };
 
     titlebar.addEventListener('mousedown', onDown);
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup',   onUp);
+  }
+
+  _makeResizable(el, id) {
+    const MIN_W = 280, MIN_H = 200;   // keep in sync with .window min-width/height
+    let dir = null, ox = 0, oy = 0, start = null;
+
+    const onDown = (e) => {
+      if (this.wins.get(id)?.state === 'maximized') return;
+      dir = e.target.dataset.dir;
+      ox = e.clientX; oy = e.clientY;
+      start = {
+        left: el.offsetLeft, top: el.offsetTop,
+        width: el.offsetWidth, height: el.offsetHeight,
+      };
+      el.classList.add('window-resizing');
+      document.body.style.cursor = getComputedStyle(e.target).cursor;
+      e.preventDefault();
+      e.stopPropagation();
+    };
+
+    const onMove = (e) => {
+      if (!dir) return;
+      const dx = e.clientX - ox, dy = e.clientY - oy;
+      const desk = document.getElementById('desktop');   // windows are positioned relative to #desktop
+      const maxW = desk.clientWidth, maxH = desk.clientHeight;
+      let { left, top, width, height } = start;
+
+      if (dir.includes('e')) width = Math.min(Math.max(MIN_W, start.width + dx), maxW - left);
+      if (dir.includes('s')) height = Math.min(Math.max(MIN_H, start.height + dy), maxH - top);
+      if (dir.includes('w')) {
+        width = Math.min(Math.max(MIN_W, start.width - dx), start.left + start.width);
+        left  = start.left + start.width - width;
+      }
+      if (dir.includes('n')) {
+        height = Math.min(Math.max(MIN_H, start.height - dy), start.top + start.height);
+        top    = start.top + start.height - height;
+      }
+
+      Object.assign(el.style, {
+        left: left + 'px', top: top + 'px', width: width + 'px', height: height + 'px',
+      });
+    };
+
+    const onUp = () => {
+      if (!dir) return;
+      dir = null;
+      el.classList.remove('window-resizing');
+      document.body.style.cursor = '';
+    };
+
+    el.querySelectorAll('.resize-handle').forEach(h => h.addEventListener('mousedown', onDown));
     document.addEventListener('mousemove', onMove);
     document.addEventListener('mouseup',   onUp);
   }
@@ -357,6 +411,7 @@ if (PREVIEW) {
     if (m.type === 'preview:post' && m.post) {
       const i = SITE.posts.findIndex(p => p.id === m.post.id);
       if (i >= 0) SITE.posts[i] = m.post; else SITE.posts.push(m.post);
+      renderWhatsNew();
       previewShowPost(m.post.id);
     }
 
@@ -540,6 +595,41 @@ function renderDesktop() {
     const hasTag = iconSVG.startsWith('<');
     container.appendChild(makeIcon(hasTag ? iconSVG : iconSVG, info.label, action, true));
   });
+
+  renderWhatsNew();
+}
+
+/* ── "What's new" desktop gadget ─────────────────── */
+function renderWhatsNew() {
+  document.getElementById('whats-new')?.remove();
+  const items = recentActivity(5);
+  if (!items.length) return;
+
+  const el = document.createElement('div');
+  el.id = 'whats-new';
+  el.className = 'gadget';
+  el.setAttribute('role', 'region');
+  el.setAttribute('aria-label', "What's new");
+  el.innerHTML = `
+    <div class="gadget-titlebar">
+      <span class="gadget-icon">📰</span>
+      <span class="gadget-title">What's new</span>
+    </div>
+    <div class="gadget-body">
+      ${items.map(({ kind, post, date }) => `
+      <div class="gadget-item" role="button" tabindex="0"
+           onclick="openPost('${post.id}')"
+           onkeydown="if(event.key==='Enter')openPost('${post.id}')">
+        <span class="gadget-item-icon">${kind === 'update' ? '🔧' : '📄'}</span>
+        <div class="gadget-item-text">
+          <div class="gadget-item-title">${post.title}${post.wip ? '<span class="post-item-wip" title="Work in progress">🚧</span>' : ''}</div>
+          <div class="gadget-item-meta">${formatShortDate(date)} · ${kind === 'update' ? 'update' : 'new post'}</div>
+        </div>
+      </div>`).join('')}
+    </div>`;
+
+  const desktop = document.getElementById('desktop');
+  desktop.insertBefore(el, document.getElementById('windows-container'));
 }
 
 function makeIcon(iconContent, label, action, isSVG = false) {
@@ -719,6 +809,29 @@ function sortedUpdates(post) {
 function latestUpdate(post) {
   const u = sortedUpdates(post);
   return u[u.length - 1];
+}
+
+// Newest-first list of {kind:'post'|'update', post, date} across all posts.
+function recentActivity(limit = 5) {
+  const key = d => d.includes('T') ? d : d + 'T00:00';
+  const items = [];
+  SITE.posts.forEach(post => {
+    if (!post || !post.id) return;
+    if (post.date) items.push({ kind: 'post', post, date: post.date });
+    sortedUpdates(post).forEach(u => items.push({ kind: 'update', post, date: u.date }));
+  });
+  return items.sort((a, b) => key(b.date).localeCompare(key(a.date))).slice(0, limit);
+}
+
+// "Sep 17" this year, "Sep 17, 2025" otherwise.
+function formatShortDate(str) {
+  if (!str) return '';
+  try {
+    const d = new Date(str.includes('T') ? str : str + 'T00:00:00');
+    const opts = { month: 'short', day: 'numeric' };
+    if (d.getFullYear() !== new Date().getFullYear()) opts.year = 'numeric';
+    return d.toLocaleDateString('en-US', opts);
+  } catch { return str; }
 }
 
 /* ════════════════════════════════════════════════════
