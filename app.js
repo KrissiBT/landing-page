@@ -26,7 +26,6 @@ class WindowManager {
   constructor() {
     this.wins   = new Map();  // id → { el, state, prevRect }
     this.zTop   = 100;
-    this.cascade = { x: 60, y: 50, step: 28, count: 0 };
     this.container = document.getElementById('windows-container');
     this.taskbarRow = document.getElementById('taskbar-windows');
   }
@@ -53,7 +52,7 @@ class WindowManager {
     if (isMobile()) {
       el.style.left = '0'; el.style.top = '0';
     } else {
-      const pos = this._nextCascade();
+      const pos = this._findFreeSpot(w || 580, h || 420);
       el.style.left = pos.x + 'px';
       el.style.top  = pos.y + 'px';
     }
@@ -122,6 +121,49 @@ class WindowManager {
     }
   }
 
+  // Grow a freshly opened window so more of its content is visible, but only
+  // as much as still fits somewhere on the desktop without covering other windows.
+  fitToContent(id, opts = {}) {
+    const win = this.wins.get(id);
+    if (!win || isMobile() || win.state === 'maximized') return;
+    const el = win.el;
+    const content = el.querySelector('.window-content');
+    if (!content) return;
+    const desk = document.getElementById('desktop');
+    const PAD = 16, IMG_EST = 260, STEP = 40;
+    const baseW = el.offsetWidth, baseH = el.offsetHeight;
+    const baseL = el.style.left, baseT = el.style.top;
+
+    const wideW = opts.wide && opts.wideWidth ? Math.min(opts.wideWidth, desk.clientWidth - PAD * 2) : baseW;
+    const widths = wideW > baseW ? [wideW, baseW] : [baseW];
+
+    // Measure how tall the content wants to be at the widest option.
+    el.style.width = wideW + 'px';
+    const overflow = content.scrollHeight - content.clientHeight;
+    const pending  = [...content.querySelectorAll('img')].filter(i => !i.complete || !i.naturalHeight).length;
+    const maxH     = Math.min(desk.clientHeight - PAD * 2, opts.maxHeight || Infinity);
+    const wantedH  = Math.max(baseH, Math.min(baseH + overflow + pending * IMG_EST, maxH));
+
+    const heights = [];
+    for (let h = wantedH; h > baseH; h -= STEP) heights.push(h);
+    heights.push(baseH);
+
+    // Pass 1: biggest size that leaves the gadget visible; pass 2: biggest size
+    // that merely avoids other windows.
+    for (const needClear of [true, false]) {
+      for (const h of heights) {
+        for (const w of widths) {
+          const spot = this._findFreeSpot(w, h, id);
+          if (!spot.free || (needClear && !spot.clear)) continue;
+          Object.assign(el.style, { width: w + 'px', height: h + 'px', left: spot.x + 'px', top: spot.y + 'px' });
+          return;
+        }
+      }
+    }
+    // Nowhere free at any size: keep the size and spot chosen by open().
+    Object.assign(el.style, { width: baseW + 'px', height: baseH + 'px', left: baseL, top: baseT });
+  }
+
   focus(id) {
     this.wins.forEach((win, wid) => {
       const active = wid === id;
@@ -136,14 +178,53 @@ class WindowManager {
 
   /* ── Internals ──────────────────────────────────── */
 
-  _nextCascade() {
-    const MAX_X = window.innerWidth  - 200;
-    const MAX_Y = window.innerHeight - 200;
-    const { step } = this.cascade;
-    let x = 60 + (this.cascade.count * step) % (MAX_X - 60);
-    let y = 50 + (this.cascade.count * step) % (MAX_Y - 50);
-    this.cascade.count++;
-    return { x, y };
+  // Top-left-most spot for a w×h window. Prefers: no overlap with open windows
+  // or the "What's new" gadget → no overlap with windows → least window overlap.
+  // Positions right of the icon column are tried before the column itself.
+  _findFreeSpot(w, h, selfId = null) {
+    const desk = document.getElementById('desktop');
+    const PAD = 16, STEP = 20, ICONS_W = 100;
+
+    const winRects = [];
+    this.wins.forEach((win, id) => {
+      if (id === selfId || win.state === 'minimized') return;
+      const e = win.el;
+      winRects.push({ x: e.offsetLeft, y: e.offsetTop, w: e.offsetWidth, h: e.offsetHeight });
+    });
+    const g = document.getElementById('whats-new');
+    const allRects = g ? [...winRects, { x: g.offsetLeft, y: g.offsetTop, w: g.offsetWidth, h: g.offsetHeight }] : winRects;
+
+    const maxX = Math.max(PAD, desk.clientWidth  - w - PAD);
+    const maxY = Math.max(PAD, desk.clientHeight - h - PAD);
+    const range = (from, to) => {
+      const out = [];
+      for (let v = from; v < to; v += STEP) out.push(v);
+      if (to >= from) out.push(to);
+      return out;
+    };
+    const ys = range(PAD, maxY);
+    const xsRight = maxX >= ICONS_W ? range(ICONS_W, maxX) : [];
+    const xsLeft  = range(PAD, Math.min(ICONS_W - STEP, maxX));
+
+    const overlap = (rects, x, y) => rects.reduce((sum, r) => {
+      const ox = Math.max(0, Math.min(x + w, r.x + r.w) - Math.max(x, r.x));
+      const oy = Math.max(0, Math.min(y + h, r.y + r.h) - Math.max(y, r.y));
+      return sum + ox * oy;
+    }, 0);
+
+    let best = null;
+    const scan = (rects, xs) => {
+      for (const y of ys) for (const x of xs) {
+        const o = overlap(rects, x, y);
+        if (o === 0) return { x, y, free: true, clear: rects === allRects };
+        if (rects === winRects && (!best || o < best.o)) best = { x, y, o };
+      }
+      return null;
+    };
+
+    return scan(allRects, xsRight) || scan(allRects, xsLeft)
+        || scan(winRects, xsRight) || scan(winRects, xsLeft)
+        || (best ? { x: best.x, y: best.y, free: false, clear: false } : { x: PAD, y: PAD, free: false, clear: false });
   }
 
   _buildEl(id, title, iconHTML, bodyHTML) {
@@ -516,6 +597,7 @@ function openPost(postId) {
         </div>`).join('')}
       </section>` : '';
   const latest = updates[updates.length - 1];
+  const fresh = !WM.wins.has(postId);
 
   WM.open(postId, post.title, '📄', `
     <div class="post-wrap">
@@ -530,6 +612,12 @@ function openPost(postId) {
       </div>
     </div>
   `, { width: 620, height: 500 });
+
+  if (fresh) {
+    const plain = html => (html || '').replace(/<[^>]+>/g, '').length;
+    const textLen = plain(post.content) + updates.reduce((n, u) => n + plain(u.content), 0);
+    WM.fitToContent(postId, { wide: textLen > 1500, wideWidth: 760 });
+  }
 }
 
 function openAbout() {
