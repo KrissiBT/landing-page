@@ -4,7 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>MuhCodes Workshop</title>
-  <link rel="stylesheet" href="style.css">
+  <!-- Cache-buster: the host sends no Cache-Control header, so give every
+       site file a unique URL per page load and browsers never serve a stale copy. -->
+  <script>
+    var BUST = '?v=' + Date.now();
+    document.write('<link rel="stylesheet" href="style.css' + BUST + '">');
+  </script>
 </head>
 <body>
 
@@ -68,8 +73,9 @@
     </div>
   </div>
 
-  <!-- Cache-buster: content.js changes on every publish, so give it a unique URL each load. -->
-  <script>document.write('<script src="content.js?v=' + Date.now() + '"><\/script>');</script>
-  <script src="app.js"></script>
+  <script>
+    document.write('<script src="content.js' + BUST + '"><\/script>');
+    document.write('<script src="app.js' + BUST + '"><\/script>');
+  </script>
 </body>
 </html>
