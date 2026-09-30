@@ -37,7 +37,7 @@ const SITE = {
     {
       "id": "qr",
       "label": "Open source qr code generator",
-      "icon": "🪛",
+      "icon": "🖊️",
       "url": "http://kristofer.is/qr/"
     },
     {
@@ -67,6 +67,11 @@ const SITE = {
       "id": "random-stuff",
       "label": "Random Stuff",
       "icon": "📁"
+    },
+    {
+      "id": "tinkering",
+      "label": "Tinkering",
+      "icon": "🪛"
     }
   ],
   "posts": [
@@ -152,6 +157,14 @@ const SITE = {
       "date": "2026-09-04",
       "excerpt": "",
       "content": "<h1>I needed a font for branding my leatherman so i had claude help me generate one </h1>\n<img src=\"assets/images/preview.png\" alt=\"\">\nlink here <a href=\"http://kristofer.is/MultitoolHeavy.ttf\" target=\"_blank\" rel=\"noopener\">Multi tool heavy </a>"
+    },
+    {
+      "id": "asembeling-the-core-one-indx",
+      "title": "Asembeling the Core One INDX",
+      "folder": "tinkering",
+      "date": "2026-09-30",
+      "excerpt": "",
+      "content": "<h1>Building a Prusa Core One INDX upgrade, one evening at a time</h1>\n<p><em>A friend's early production kit, a firmware bug, a stuck nozzle, and why I still want one of my own.</em></p>\n\n<p>The other day I helped a friend install his INDX upgrade on his Prusa Core One. He has a family, so we couldn't sit down and power through it in one go. We chipped away at it over a few days whenever we had time. Added up, the actual build took about five hours.</p>\n\n<p>If you haven't followed the INDX, it's a toolchanger developed by Bondtech together with Prusa. Instead of swapping filament through a single nozzle, the printer carries one \"Smart Head\" on the gantry and picks up separate nozzle tools from docks on the side of the machine. The clever part is that the tools themselves are passive. They have no heater of their own; the head heats whichever nozzle it's holding using induction, like an induction cooktop. That keeps each tool simple and cheap, and it means very little waste when you change colors or materials. The Core One can take up to eight tools.</p>\n\n<figure>\n  <img src=\"assets/images/2fec4963-67d3-4ff2-a33e-8bd5d693d952_1_105_c.jpg\" alt=\"A tablet showing a step in the Prusa assembly instructions telling the builder to eat some gummy bears\">\n  <figcaption>Prusa tradition holds: at certain steps, the manual tells you to eat a few gummy bears. We followed the instructions to the letter.</figcaption>\n</figure>\n\n<h2>The assembly</h2>\n<p>The instructions were a bit all over the place at times. More than once we were sent off to do things in an order that felt wrong, and we'd find ourselves wondering why a step hadn't come earlier or later. Even so, once all the pieces were in place, the system came together and the kit felt solid.</p>\n\n<figure>\n  <img src=\"assets/images/9cd7f47e-ce11-4dba-b0bb-639d49c28a7d_1_105_c.jpg\" alt=\"A Prusa Core One with the INDX upgrade almost fully assembled\">\n  <figcaption>Nearly there. The hardware went together without much drama.</figcaption>\n</figure>\n\n<h2>The firmware bug</h2>\n<p>Getting the hardware assembled turned out to be the easy part. It took us another full day to figure out why the printer refused to finish its homing calibration and gantry squareness check.</p>\n\n<p>The Core One doesn't use physical endstop switches. It homes by detecting when the motors hit the end of travel, a kind of virtual endstop. On the firmware we were running, those virtual endstops were far too sensitive. The printer kept deciding it had reached the end before it actually had, which made the calibrations impossible to complete. We weren't the only ones either: other INDX owners have reported homing failures, and a later firmware release included a homing fix along with a new gantry squareness wizard. Once we got past that, the printer finally came to life.</p>\n\n<figure>\n  <img src=\"assets/images/43067dd7-8aef-4516-a5de-586a750cd259_1_105_c.jpg\" alt=\"Close-up of the Core One screen during a firmware update\">\n  <figcaption>Watching the firmware update. We got to know this screen well.</figcaption>\n</figure>\n\n<h2>The first print</h2>\n<p>Of course, the first print didn't go smoothly either. During a tool change, the head failed to let go of the nozzle tool, and we ended up disassembling the tool head to free it. Not the triumphant first print we'd hoped for, but after the repair the machine was up and running.</p>\n\n<p>In hindsight, it's a known enough problem that Prusa has a help article for it: <a href=\"https://help.prusa3d.com/article/nozzle-tool-remains-attached-to-the-print-head-core-one-indx_1077657\">Nozzle tool remains attached to the print head</a>. It describes a manual release method that doesn't require taking the head apart. If this happens to you, read that before reaching for the screwdriver.</p>\n\n<figure>\n  <img src=\"assets/images/a7523c09-ce9a-42da-a844-23395e2c0362_1_105_c.jpg\" alt=\"The fully assembled Core One INDX with three filament spools attached\">\n  <figcaption>Done: the finished Core One INDX with three spools loaded.</figcaption>\n</figure>\n\n<h2>So, would I buy one?</h2>\n<p>Yes, and I'm genuinely excited to. Despite everything, watching the head swap nozzles in a few seconds is a real thrill, and it's the kind of multi-material setup that doesn't bury you in purge waste. My friend's kit was one of the first to come off the production line, so some rough edges aren't too surprising. The firmware has already improved since our build, and I'm hoping that by the time mine arrives, the manufacturing will be a little more careful too.</p>"
     }
   ]
 }; // ← end of SITE config
