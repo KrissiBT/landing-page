@@ -97,7 +97,7 @@ const SITE = {
       "folder": "kristofer",
       "date": "2019-05-01",
       "excerpt": "Head of Engineering · Franchise Consultant · 2 yrs 5 months",
-      "content": "<h2>Hopp</h2>\n        <p class=\"post-meta\">📍 Reykjavík, Iceland &nbsp;·&nbsp; 2 years 5 months</p>\n\n        <h3>Head of Engineering</h3>\n        <p class=\"post-meta\">May 2019 – May 2021</p>\n        <p>Built and led the engineering team at Hopp, overseeing product development\n        and technical operations across the platform.</p>\n\n        <h3>Franchise Consultant</h3>\n        <p class=\"post-meta\">May 2021 – September 2021</p>\n        <p>Advised on technical requirements and processes for franchise operations\n        following the transition from the engineering leadership role.</p>"
+      "content": "<h2>Hopp</h2>\n        <p class=\"post-meta\">📍 Reykjavík, Iceland &nbsp;·&nbsp; 2 years 5 months</p>\n\n        <h3>Head of Engineering</h3>\n        <p class=\"post-meta\">May 2019 – May 2021</p>\n        <p>Built and led the engineering team at Hopp, overseeing product development\n        and technical operations across the platform.</p>\n\n        <h3>Franchise Consultant</h3>\n        <p class=\"post-meta\">May 2021 – September 2021</p>\n        <p>Advised on technical requirements and processes for franchise operations\n        following the transition from the engineering leadership role</p>"
     },
     {
       "id": "job-innovation-center",
